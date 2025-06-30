@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fake Job Post Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            color: white;
+            padding: 30px 10px;
+        }
+
+        .glass-container {
+            width: 100%;
+            max-width: 750px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: 0.3s ease-in-out;
+            padding: 12px;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-control:focus,
+        .form-control:not(:placeholder-shown) {
+            background: white;
+            color: black;
+        }
+
+        .custom-select {
+            position: relative;
+        }
+
+        .custom-select select {
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px;
+            padding-right: 40px;
+            color: rgba(255, 255, 255, 0.5);
+            width: 100%;
+            transition: 0.3s ease-in-out;
+        }
+
+        .custom-select::after {
+            content: "▼";
+            font-size: 16px;
+            color: white;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .custom-select select:valid {
+            color: black;
+            background: white;
+        }
+
+        .custom-select select option {
+            color: black;
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, #ff00ff, #ff007f);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: 0.3s ease-in-out;
+            width: 100%;
+            color: white;
+        }
+
+        .btn-glow:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 4px 20px rgba(255, 0, 255, 0.8);
+        }
+
+        .result-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-container">
+    <h2 class="text-center mb-4">🔍 Fake Job Post Detection</h2>
+    <form method="POST" action="{% url 'predict_fake_job' %}">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">🏢 Company Name</label>
+                    <input type="text" class="form-control" name="company_name" placeholder="Enter company name" required value="{{ request.POST.company_name|default:'' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">💼 Job Position</label>
+                    <input type="text" class="form-control" name="job_position" placeholder="Enter job position" required value="{{ request.POST.job_position|default:'' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="job_description">📝 Job Description</label>
+                    <textarea class="form-control" id="job_description" name="job_description" rows="6" placeholder="Enter the full job description here..." required>{{ request.POST.job_description|default:'' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">✔ Certified Company?</label>
+                    <div class="custom-select">
+                        <select class="form-select form-select-placeholder" name="company_certified" required>
+                            <option value="" disabled {% if not request.POST.company_certified %}selected{% endif %}> Select an option </option>
+                            <option value="Yes" {% if request.POST.company_certified == "Yes" %}selected{% endif %}> Yes </option>
+                            <option value="No" {% if request.POST.company_certified == "No" %}selected{% endif %}> No </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">📍 Verified Location?</label>
+                    <div class="custom-select">
+                        <select class="form-select form-select-placeholder" name="location_certified" required>
+                            <option value="" disabled {% if not request.POST.location_certified %}selected{% endif %}> Select an option </option>
+                            <option value="Yes" {% if request.POST.location_certified == "Yes" %}selected{% endif %}> Yes </option>
+                            <option value="No" {% if request.POST.location_certified == "No" %}selected{% endif %}> No </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">👥 User Feedback Score</label>
+                    <input type="number" step="0.1" class="form-control" name="user_feedback_score" placeholder="Enter feedback score" required value="{{ request.POST.user_feedback_score|default:'' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">🛡 Scam Reports</label>
+                    <input type="number" class="form-control" name="scam_reports" placeholder="Enter number of scam reports" required value="{{ request.POST.scam_reports|default:'' }}">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-glow mt-3">🔍 Predict</button>
+    </form>
+
+    {% if result %}
+    <div class="result-box">
+        <h5>📊 Prediction Result</h5>
+        <p><strong>🔎 Fake Job Post:</strong> {{ result.Fake_Job }}</p>
+        <p><strong>📈 Accuracy:</strong> {{ result.Confidence_Score }}</p>
+        {% if result.Company_Website %}
+            <p><strong>🌐 Company Website:</strong> 
+                <u>
+
+                <a href="{{ result.Company_Website }}" target="_blank" style="color: white; text-decoration: none;">
+                    {{ result.Company_Website }}
+                </a>
+                </u>
+            </p>
+        {% else %}
+            <p><strong>🌐 Company Website:</strong> Not Available</p>
+        {% endif %}
+    </div>
+    {% elif error %}
+    <div class="alert alert-danger mt-3">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
